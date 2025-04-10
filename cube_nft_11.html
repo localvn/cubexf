@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Cube Assembly #11</title>
+    <style>
+        body {
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            perspective: 40em;
+            background: #111;
+            text-align: center;
+        }
+
+        div {
+            position: absolute;
+            transform-style: preserve-3d;
+        }
+
+        .assembly {
+            top: 50%;
+            left: 50%;
+            transform: rotateX(-22.5deg) rotateY(-30deg);
+        }
+
+        .rotor {
+            transform: translate(-50%, -50%);
+        }
+
+        .cube {
+            animation: a 0.65s cubic-bezier(0.65, 0.05, 0.35, 1) infinite alternate;
+        }
+
+        .drag .cube {
+            animation-play-state: paused;
+        }
+
+        .cube__face {
+            box-sizing: border-box;
+            margin: -0.75em;
+            border: solid 1px #ccc;
+            width: 1.5em;
+            height: 1.5em;
+            backface-visibility: hidden;
+            background: currentColor;
+        }
+
+        .cube__face:nth-child(1) { transform: rotateY(0deg) translateZ(0.75em); }
+        .cube__face:nth-child(2) { transform: rotateY(90deg) translateZ(0.75em); }
+        .cube__face:nth-child(3) { transform: rotateY(180deg) translateZ(0.75em); }
+        .cube__face:nth-child(4) { transform: rotateY(270deg) translateZ(0.75em); }
+        .cube__face:nth-child(5) { transform: rotateX(90deg) translateZ(0.75em); }
+        .cube__face:nth-child(6) { transform: rotateX(-90deg) translateZ(0.75em); }
+    </style>
+</head>
+<body>
+    <div class="assembly">
+        <div class="rotor">
+            <!-- Cubes sẽ được tạo bằng JS -->
+        </div>
+    </div>
+
+    <script>
+        const nc = 5;
+        const nd = 3;
+        const n = Math.pow(nc, nd);
+        const nf = 6;
+        const l = 1.5;
+        const f = [2, 1.5];
+        const m = 0.5 * (nc - 1);
+        const hu = 360 / (nc + 1);
+        const t = 0.65;
+        const tu = 2 * t / Math.pow(m, 3);
+        const colors = [[164, 53, 124], [226, 99, 21], [227, 202, 110], [244, 218, 59], [174, 27, 167], [76, 213, 246], [41, 122, 249], [136, 57, 250], [50, 160, 144], [19, 96, 15], [143, 54, 192], [188, 207, 182], [208, 167, 56], [115, 208, 119], [237, 194, 251], [133, 146, 248], [76, 213, 246], [106, 86, 36], [98, 38, 111], [41, 122, 249], [39, 1, 82], [136, 57, 250], [107, 242, 220], [4, 188, 18], [150, 60, 216], [170, 165, 80], [119, 173, 237], [143, 54, 192], [51, 104, 30], [170, 165, 80], [135, 65, 42], [109, 180, 137], [4, 188, 18], [187, 102, 170], [109, 180, 137], [90, 236, 18], [226, 99, 21], [11, 30, 26], [106, 86, 36], [132, 94, 236], [55, 164, 95], [203, 18, 218], [218, 171, 71], [41, 122, 249], [163, 162, 45], [143, 54, 192], [214, 100, 113], [95, 202, 127], [126, 91, 117], [55, 164, 95], [133, 146, 248], [136, 57, 250], [41, 122, 249], [178, 135, 38], [218, 171, 71], [89, 247, 93], [71, 214, 43], [164, 248, 74], [226, 99, 21], [109, 180, 137], [242, 153, 165], [237, 190, 194], [106, 32, 156], [109, 180, 137], [174, 27, 167], [174, 27, 167], [150, 240, 66], [25, 227, 211], [213, 194, 232], [43, 88, 179], [213, 194, 232], [106, 86, 36], [219, 148, 255], [193, 229, 204], [189, 133, 205], [22, 244, 40], [244, 218, 59], [150, 60, 216], [223, 26, 228], [196, 158, 174], [223, 26, 228], [41, 122, 249], [212, 153, 46], [115, 208, 119], [43, 88, 179], [201, 198, 57], [10, 243, 38], [214, 100, 113], [70, 152, 196], [109, 194, 249], [192, 116, 30], [133, 146, 248], [19, 96, 15], [223, 26, 228], [242, 153, 165], [237, 194, 251], [39, 1, 82], [19, 96, 15], [39, 1, 82], [224, 18, 43], [237, 194, 251], [242, 153, 165], [187, 102, 170], [41, 122, 249], [199, 153, 91], [208, 167, 56], [136, 57, 250], [70, 152, 196], [79, 97, 19], [41, 122, 249], [95, 202, 127], [43, 88, 179], [192, 116, 30], [192, 116, 30], [193, 229, 204], [238, 7, 186], [242, 153, 165], [119, 173, 237], [107, 13, 69], [213, 194, 232], [135, 170, 70], [207, 114, 62], [224, 174, 46], [201, 198, 57], [95, 202, 127]];
+
+        const rotor = document.querySelector('.rotor');
+        const styleSheet = document.createElement('style');
+        document.head.appendChild(styleSheet);
+
+        for (let i = 0; i < n; i++) {
+            const cube = document.createElement('div');
+            cube.className = 'cube';
+            for (let j = 0; j < nf; j++) {
+                const face = document.createElement('div');
+                face.className = 'cube__face';
+                cube.appendChild(face);
+            }
+            rotor.appendChild(cube);
+        }
+
+        let styles = '';
+        for (let i0 = 0; i0 < nc; i0++) {
+            const j0 = i0 - m;
+            const k0 = Math.pow(j0, 2);
+            const xi = f[0] * j0 * l;
+            const xf = f[1] * xi;
+
+            for (let i1 = 0; i1 < nc; i1++) {
+                const j1 = i1 - m;
+                const k1 = Math.pow(j1, 2);
+                const yi = f[0] * j1 * l;
+                const yf = f[1] * yi;
+
+                for (let i2 = 0; i2 < nc; i2++) {
+                    const j2 = i2 - m;
+                    const k2 = Math.pow(j2, 2);
+                    const zi = f[0] * j2 * l;
+                    const zf = f[1] * zi;
+                    const dt = Math.sqrt(k0 + k1 + k2) * tu;
+                    const idx = i0 * Math.pow(nc, 2) + i1 * nc + i2 + 1;
+                    const [r, g, b] = colors[idx - 1];
+
+                    styles += `
+                        .cube:nth-child(${idx}) {
+                            transform: translate3d(${xi}em, ${yi}em, ${zi}em);
+                            color: rgb(${r}, ${g}, ${b});
+                            animation-name: a${idx};
+                            animation-delay: -${dt}s;
+                        }
+                        @keyframes a${idx} {
+                            to { transform: translate3d(${xf}em, ${yf}em, ${zf}em); }
+                        }
+                    `;
+                }
+            }
+        }
+        styleSheet.textContent = styles;
+
+        const _r = rotor;
+        const dcls = 'drag';
+        let drag = false, x0 = null, y0 = null, rx = -22.5, ry = -30;
+
+        const getE = (ev) => ev.touches ? ev.touches[0] : ev;
+
+        const lock = (ev) => {
+            ev.preventDefault();
+            let e = getE(ev);
+            drag = true;
+            x0 = e.clientX;
+            y0 = e.clientY;
+            _r.classList.add(dcls);
+        };
+
+        const act = (ev) => {
+            if (drag) {
+                ev.preventDefault();
+                let e = getE(ev),
+                    x = e.clientX, y = e.clientY,
+                    dx = x - x0, dy = y - y0;
+
+                if (dx || dy) {
+                    rx += dy * 0.5;
+                    ry += dx * 0.5;
+                    _r.style.transform = `translate(-50%, -50%) rotateX(${rx}deg) rotateY(${ry}deg)`;
+                }
+
+                x0 = x;
+                y0 = y;
+            }
+        };
+
+        const release = () => {
+            if (drag) {
+                drag = false;
+                x0 = y0 = null;
+                _r.classList.remove(dcls);
+            }
+        };
+
+        document.addEventListener('mousedown', lock, false);
+        document.addEventListener('touchstart', lock, false);
+        document.addEventListener('mousemove', act, false);
+        document.addEventListener('touchmove', act, false);
+        document.addEventListener('mouseup', release, false);
+        document.addEventListener('touchend', release, false);
+    </script>
+</body>
+</html>
